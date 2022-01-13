@@ -11,20 +11,7 @@ class Book {
 // UI class: Handle UI Tasks
 class UI {
   static displayBooks() {
-    const storedBooks = [
-      {
-        title: 'First Book',
-        author: 'Fred Mih',
-        isbn: '222334',
-      },
-      {
-        title: 'Second Book',
-        author: 'Ngum Mih',
-        isbn: '442334',
-      },
-    ];
-
-    const books = storedBooks;
+    const books = Store.getBooks();
 
     books.forEach((book) => UI.addBookToList(book));
   }
@@ -56,7 +43,6 @@ class UI {
 
     //Remove alert
     setTimeout(() => document.querySelector('.alert').remove(), 1000);
-
   }
 
   static clearFields() {
@@ -68,21 +54,30 @@ class UI {
 
 //  Storage Class: Handles Storage
 class Store {
-    static getBooks() {
-       let books;
-       if(localStorage.getItem('books') === null){
-       books = [];
-    }else {
-        books = JSON.parse(localStorage.getItem('books'));
+  static getBooks() {
+    let books;
+    if (localStorage.getItem('books') === null) {
+      books = [];
+    } else {
+      books = JSON.parse(localStorage.getItem('books'));
     }
     return books;
-    }
-    static addBook(book) {
+  }
+  static addBook(book) {
+    const books = Store.getBooks();
+    books.push(book);
+    localStorage.setItem('books', JSON.stringify(books));
+  }
+  static removeBook(isbn) {
+    const books = Store.getBooks();
 
-    }
-    static removeBook(isbn){
-
-    }
+    books.forEach((book, index) => {
+      if (book.isbn === isbn) {
+        books.splice(index, 1);
+      }
+    });
+    localStorage.setItem('books', JSON.stringify(books));
+  }
 }
 
 // Event: Display Books
@@ -98,25 +93,32 @@ document.querySelector('#book-form').addEventListener('submit', (e) => {
   const isbn = document.querySelector('#isbn').value;
 
   // Validations
-  if(title === '' || author === '' || isbn === '') {
-      UI.showAlert('Please fill in all fields', 'danger');
-  }else {
+  if (title === '' || author === '' || isbn === '') {
+    UI.showAlert('Please fill in all fields', 'danger');
+  } else {
+    // Instantiate book
+    const book = new Book(title, author, isbn);
 
-  // Instantiate book
-  const book = new Book(title, author, isbn);
+    // Add Book to UI
+    UI.addBookToList(book);
+    Store.addBook(book);
 
-  // Add Book to UI
-  UI.addBookToList(book);
+    // Add Book to Store
 
-  // Show Success message
-  UI.showAlert('Book Added', 'success');
+    // Show Success message
+    UI.showAlert('Book Added', 'success');
 
-  // Clear fields
-  UI.clearFields();
+    // Clear fields
+    UI.clearFields();
   }
 });
 // Event: Remove a Book
 document.querySelector('#book-list').addEventListener('click', (event) => {
+  // RemoveBook from  ui
   UI.deleteBook(event.target);
+
+  // Remove Book from Store
+  Store.removeBook(event.target.parentElement.previousElementSibling.textContent);
   UI.showAlert('Book deleted', 'success');
+  Store.re;
 });
